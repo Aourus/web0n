@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEON MAZE — Countdown Arcade</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Press+Start+2P&display=swap');
+:root{--cyan:#00eaff;--yellow:#ffe600;--pink:#ff3cac;--bg:#050713}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:#eafcff;background:radial-gradient(ellipse at 50% 0%,#17204b 0%,#090d20 42%,#03040b 100%);font-family:Orbitron,system-ui,sans-serif;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;opacity:.12;background:repeating-linear-gradient(0deg,transparent 0 3px,#000 4px 5px)}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse,transparent 45%,#000a 100%);z-index:4}
+.wrap{width:min(1120px,94vw);margin:0 auto;padding:34px 0 28px;position:relative;z-index:1}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+.brand{font:clamp(16px,3vw,25px) 'Press Start 2P',monospace;color:var(--yellow);text-shadow:0 0 8px #ffe600,0 0 24px #ffb700}
+.status{font-size:10px;letter-spacing:2px;color:#8bf8ff;border:1px solid #00eaff66;padding:9px 12px;border-radius:99px;box-shadow:0 0 18px #00eaff22}
+.status i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#65ff9b;box-shadow:0 0 10px #65ff9b;margin-right:8px}
+.panel{border:1px solid #00eaff66;border-radius:22px;background:linear-gradient(145deg,#0d1730dd,#070a19ee);box-shadow:0 0 30px #00d9ff18,inset 0 0 35px #00d9ff0b;overflow:hidden}
+.hero{text-align:center;padding:30px 22px 14px}
+.eyebrow{font-size:10px;letter-spacing:5px;color:var(--cyan);margin-bottom:17px}
+h1{font-size:clamp(26px,5vw,54px);margin:0;color:#fff;text-shadow:0 0 10px #00eaff,0 0 30px #00bfff;letter-spacing:3px}
+.sub{color:#9aaed7;font-size:11px;letter-spacing:3px;margin:13px 0 0}
+.scoreline{display:flex;justify-content:center;gap:30px;margin-top:20px;color:#8294bc;font-size:9px;letter-spacing:2px}
+.scoreline b{color:var(--yellow);font-size:12px}
+.timer{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:22px clamp(12px,4vw,42px) 26px}
+.unit{position:relative;text-align:center;padding:19px 8px 15px;border:1px solid #253a70;border-radius:14px;background:linear-gradient(180deg,#111d3c,#090f24);box-shadow:inset 0 0 22px #00cfff0c,0 8px 20px #0006}
+.unit:before{content:"";position:absolute;top:0;left:18%;width:64%;height:2px;background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+.num{font-size:clamp(28px,6vw,65px);font-weight:900;line-height:1;color:var(--yellow);font-variant-numeric:tabular-nums;text-shadow:0 0 8px #ffe600,0 0 24px #ffae00;letter-spacing:1px}
+.label{font-size:9px;letter-spacing:3px;color:#7deeff;margin-top:12px}
+.gamebox{margin-top:20px;padding:12px;background:#030712;border:1px solid #263d78;border-radius:16px;box-shadow:inset 0 0 30px #000}
+.gamehead{display:flex;justify-content:space-between;gap:10px;padding:4px 8px 12px;font:9px 'Press Start 2P',monospace;color:#9bb5ed}
+.gamehead span:first-child{color:var(--pink)}
+canvas{display:block;width:100%;height:auto;aspect-ratio:900/290;border-radius:9px;background:#05091a}
+.gamefoot{display:flex;justify-content:space-between;gap:10px;padding:12px 8px 3px;font-size:9px;letter-spacing:2px;color:#8295c3}
+.gamefoot b{color:var(--yellow)}
+.controls{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:end;margin-top:18px;padding:18px 20px}
+.control-label{display:block;color:#8fa7d8;font-size:9px;letter-spacing:2px;margin-bottom:9px}
+input{background:#070d20;border:1px solid #35508d;color:#eaffff;padding:12px 13px;border-radius:9px;font:600 13px Orbitron;width:100%;color-scheme:dark}
+button{border:0;border-radius:9px;padding:13px 18px;background:linear-gradient(110deg,#ffe600,#ff9d00);color:#171000;font:900 10px Orbitron;letter-spacing:1px;cursor:pointer;box-shadow:0 0 18px #ffce0060;transition:.2s}
+button:hover{transform:translateY(-2px);box-shadow:0 0 28px #ffce00a0}
+.hint{text-align:center;color:#65769e;font-size:9px;letter-spacing:1.5px;margin:15px 0 0}
+.footer{text-align:center;font:9px 'Press Start 2P',monospace;color:#51648e;margin-top:22px;line-height:2.2}
+@media(max-width:620px){.wrap{padding-top:20px}.top{align-items:flex-start}.status{font-size:8px}.timer{gap:7px;padding:18px 10px}.unit{padding:16px 3px 13px}.label{font-size:7px;letter-spacing:1px}.num{font-size:clamp(23px,8vw,42px)}.controls{grid-template-columns:1fr}.controls button{width:100%}.gamehead,.gamefoot{font-size:7px}.scoreline{gap:14px;font-size:8px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">NEON MAZE<span style="color:var(--cyan)">_</span></div>
+    <div class="status"><i></i> SYSTEM ONLINE</div>
+  </div>
+  <section class="panel">
+    <div class="hero">
+      <div class="eyebrow">◈ COUNTDOWN PROTOCOL ACTIVATED ◈</div>
+      <h1 id="eventTitle">THE BIG EVENT</h1>
+      <div class="sub">THE CLOCK IS TICKING. THE MAZE IS WAITING.</div>
+      <div class="scoreline"><span>PLAYER <b>01</b></span><span>HIGH SCORE <b>∞</b></span><span>MODE <b>ARCADE</b></span></div>
+      <div class="sub" style="margin-top:16px;color:#ffe600">TARGET LOCKED · 18 DEC 2026 · 20:30 CDMX</div>
+    </div>
+    <div class="timer" aria-live="off">
+      <div class="unit"><div class="num" id="days">000</div><div class="label">DAYS</div></div>
+      <div class="unit"><div class="num" id="hours">00</div><div class="label">HOURS</div></div>
+      <div class="unit"><div class="num" id="minutes">00</div><div class="label">MINUTES</div></div>
+      <div class="unit"><div class="num" id="seconds">00</div><div class="label">SECONDS</div></div>
+    </div>
+  </section>
+
+  <section class="gamebox">
+    <div class="gamehead"><span>● LIVE GAME ENGINE</span><span>INSERT COIN // 198X</span></div>
+    <canvas id="maze" width="900" height="290" aria-label="Bloques del laberinto formando GOU con Pac-Man y fantasmas animados"></canvas>
+    <div class="gamefoot"><span>● <b id="pelletCount">000</b> PIXELS EATEN</span><span>CHASE THE FUTURE <b>►</b></span></div>
+  </section>
+
+  <div class="footer">GAME OVER? NEVER. &nbsp; ◈ &nbsp; KEEP MOVING FORWARD</div>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  // Fecha fija: 18-dic-2026 20:30 en Ciudad de México (UTC-06:00).
+  // Se guarda como instante absoluto para que el conteo sea correcto aunque el navegador esté en otra zona.
+  const target = new Date(Date.UTC(2026, 11, 19, 2, 30, 0));
+  const pad = n => String(n).padStart(2,'0');
+  function tick(){
+    let diff = Math.max(0, target.getTime() - Date.now());
+    const days = Math.floor(diff/86400000); diff %= 86400000;
+    const hours = Math.floor(diff/3600000); diff %= 3600000;
+    const mins = Math.floor(diff/60000); diff %= 60000;
+    const secs = Math.floor(diff/1000);
+    $('days').textContent = String(days).padStart(3,'0');
+    $('hours').textContent = pad(hours);
+    $('minutes').textContent = pad(mins);
+    $('seconds').textContent = pad(secs);
+    if(target.getTime() <= Date.now()) $('eventTitle').textContent = 'LEVEL COMPLETE!';
+  }
+  tick(); setInterval(tick, 250);
+
+  // Canvas arcade engine: el laberinto está construido con bloques que forman GOU.
+  const canvas = $('maze'), ctx = canvas.getContext('2d');
+  const W=900,H=290, cols=30, rows=9, cw=W/cols, ch=H/rows;
+  let pellets=0, eaten=new Set();
+  const walls = new Set();
+  const perimeter = new Set();
+  const letterBlocks = new Map();
+
+  // PERÍMETRO ORIGINAL: conserva exactamente el azul del primer diseño.
+  for(let c=0;c<cols;c++){
+    perimeter.add(`${c},0`);
+    perimeter.add(`${c},${rows-1}`);
+  }
+  for(let r=1;r<rows-1;r++){
+    perimeter.add(`0,${r}`);
+    perimeter.add(`${cols-1},${r}`);
+  }
+  perimeter.forEach(key => walls.add(key));
+
+  // Tipografía pixel 5x7: cada 1 se convierte en un bloque del laberinto.
+  const font5x7 = {
+    G:['01110','10001','10000','10111','10001','10001','01110'],
+    O:['01110','10001','10001','10001','10001','10001','01110'],
+    U:['10001','10001','10001','10001','10001','10001','01110']
+  };
+  const gap=1, wordWidth=17;
+  const startCol=Math.floor((cols-wordWidth)/2);
+  const startRow=1;
+  ['G','O','U'].forEach((letter,i)=>{
+    font5x7[letter].forEach((line,r)=>{
+      [...line].forEach((bit,c)=>{
+        if(bit==='1'){
+          const key=`${startCol+i*6+c},${startRow+r}`;
+          walls.add(key);
+          // Paleta premium coordinada: teal, azul eléctrico y ámbar.
+          const palette={G:'#20C9B7',O:'#438BFF',U:'#FFC45C'};
+          letterBlocks.set(key,palette[letter]);
+        }
+      });
+    });
+  });
+  const ghosts=[
+    {x:13,y:4,color:'#ff3b69',phase:0},
+    {x:16,y:4,color:'#00eaff',phase:1.5},
+    {x:19,y:4,color:'#ff8ce8',phase:3},
+    {x:22,y:4,color:'#ff9d32',phase:4.5}
+  ];
+  function drawGhost(x,y,color,t){
+    const px=x*cw+cw/2, py=y*ch+ch/2+Math.sin(t*2)*3, rad=ch*.31;
+    ctx.save();ctx.shadowBlur=17;ctx.shadowColor=color;ctx.fillStyle=color;
+    ctx.beginPath();ctx.arc(px,py-rad*.15,rad,Math.PI,0);ctx.lineTo(px+rad,py+rad*.9);
+    for(let i=0;i<3;i++){ctx.lineTo(px+rad-(i*2+1)*rad/3,py+rad*.55);ctx.lineTo(px+rad-(i*2+2)*rad/3,py+rad*.9)}
+    ctx.closePath();ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(px-5,py-3,4,0,Math.PI*2);ctx.arc(px+6,py-3,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#17204b';ctx.beginPath();ctx.arc(px-4+Math.sin(t)*1.5,py-2,1.8,0,Math.PI*2);ctx.arc(px+7+Math.sin(t)*1.5,py-2,1.8,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+  function render(ms){
+    const t=ms/1000;
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#05091a';ctx.fillRect(0,0,W,H);
+    // Cuadrícula original del contenedor.
+    ctx.strokeStyle='#10204a';ctx.lineWidth=1;
+    for(let x=0;x<=W;x+=cw){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+    for(let y=0;y<=H;y+=ch){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+    // Marco neón interior más los bloques perimetrales del laberinto.
+    ctx.save();
+    ctx.shadowBlur=16;
+    ctx.shadowColor='#00cfff';
+    ctx.strokeStyle='#168bff';
+    ctx.lineWidth=2;
+    ctx.strokeRect(2,2,W-4,H-4);
+    ctx.restore();
+
+    // Perímetro azul original + letras GOU con acentos de color independientes.
+    for(const key of walls){
+      const [c,r]=key.split(',').map(Number),x=c*cw+3,y=r*ch+3;
+      const letterColor=letterBlocks.get(key);
+      ctx.save();
+      if(letterColor){
+        ctx.shadowBlur=15;ctx.shadowColor=letterColor;
+        ctx.fillStyle=letterColor;
+        ctx.fillRect(x,y,cw-6,ch-6);
+        ctx.shadowBlur=0;
+        ctx.strokeStyle='#EAFBFF';ctx.globalAlpha=.78;ctx.lineWidth=1.4;
+        ctx.strokeRect(x,y,cw-6,ch-6);
+        ctx.globalAlpha=.22;ctx.fillStyle='#FFFFFF';
+        ctx.fillRect(x+2,y+2,cw-10,3);
+      } else {
+        // No alterar el color ni el acabado del marco perimetral original.
+        ctx.shadowBlur=9;ctx.shadowColor='#176dff';
+        ctx.fillStyle='#0b1a3b';ctx.fillRect(x,y,cw-6,ch-6);
+        ctx.shadowBlur=0;
+        ctx.strokeStyle='#287cff';ctx.lineWidth=2;
+        ctx.strokeRect(x,y,cw-6,ch-6);
+      }
+      ctx.restore();
+    }
+    // Puntos de arcade en los espacios libres.
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+      const key=`${c},${r}`;if(walls.has(key))continue;
+      const x=c*cw+cw/2,y=r*ch+ch/2;
+      if(!eaten.has(key)){ctx.beginPath();ctx.fillStyle='#ffe9a3';ctx.shadowBlur=8;ctx.shadowColor='#ffe600';ctx.arc(x,y,2.1,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
+    }
+    // Pac-Man recorre el carril central y los fantasmas lo persiguen.
+    const travel=(t*3.4)%27, hx=1.5+travel, hy=4.5;
+    const px=hx*cw,py=hy*ch,mouth=.18+Math.abs(Math.sin(t*11))*.48;
+    const tile=Math.floor(hx)+',4';if(!eaten.has(tile)){eaten.add(tile);pellets++;$('pelletCount').textContent=String(pellets).padStart(3,'0')}
+    ctx.save();ctx.translate(px,py);ctx.shadowBlur=24;ctx.shadowColor='#ffe600';ctx.fillStyle='#ffe600';
+    ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,12,mouth,Math.PI*2-mouth);ctx.closePath();ctx.fill();ctx.restore();
+    ghosts.forEach(g=>drawGhost(g.x+Math.sin(t*.65+g.phase)*1.2,g.y,g.color,t+g.phase));
+    ctx.fillStyle='#ffffff08';for(let y=0;y<H;y+=4)ctx.fillRect(0,y,W,1);
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+})();
+</script>
+</body>
+</html>
